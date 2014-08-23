@@ -1,0 +1,21 @@
+---
+roles:
+
+  master:
+    provisioners:
+      - type: shell
+        inline: | # bootstrap puppet settings
+          apt-get update
+          apt-get -y install rubygems git
+          hash r10k || gem install r10k --no-ri --no-rdoc
+          puppet apply -e 'include site::profile::puppet::vagrant::bootstrap_hiera' --modulepath=/vagrant_src/projects/infrastructure/:/vagrant_src/modules
+          puppet apply -e 'include site::profile::puppet::vagrant::bootstrap_puppetconf' --modulepath=/vagrant_src/projects/infrastructure:/vagrant_src/modules
+    synced_folders:
+      - {host_path: 'src', guest_path: '/vagrant_src'}
+  agent:
+    provisioners:
+      - type: shell
+        inline: | # bootstrap puppet settings
+          hash puppet 2>/dev/null || ( echo 'export PATH=$PATH:/opt/puppet/bin' >> /etc/profile ) ; source /etc/profile # EL path sometimes misses puppet
+    synced_folders:
+      - {host_path: 'src', guest_path: '/vagrant_src'}
