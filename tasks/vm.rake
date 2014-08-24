@@ -4,7 +4,7 @@ namespace :vm do
   desc 'run an agent --test on a given VM'
     task :kick, :node do |t, args|
       node = args[:node]
-      system "echo 'sudo -i puppet agent --test --server=pemaster-vagrant.ops.puppetlabs.net' | vagrant ssh #{node}"
+      system "echo 'sudo -i puppet agent --test --server=master-vagrant.cloud.puppetlabs.net' | vagrant ssh #{node}"
     end
 
   desc 'destroy and re-create a given VM'
@@ -12,7 +12,7 @@ namespace :vm do
       node = args[:node]
       ANSWERFILE = File.join('.pe_build', 'answers', "#{node}.txt")
       File.delete(ANSWERFILE) if File.file?(ANSWERFILE)
-      system "echo 'sudo -i puppet cert clean #{node}' | vagrant ssh pemaster-vagrant.ops.puppetlabs.net"
+      system "echo 'sudo -i puppet cert clean #{node}' | vagrant ssh master-vagrant.cloud.puppetlabs.net"
       system "vagrant destroy -f #{node} ; vagrant up #{node}"
     end
 

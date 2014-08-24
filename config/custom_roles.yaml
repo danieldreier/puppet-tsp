@@ -3,19 +3,46 @@ roles:
 
   master:
     provisioners:
+      - type: hosts
       - type: shell
         inline: | # bootstrap puppet settings
+          echo "step 1"
+          hostname --long
           apt-get update
           apt-get -y install rubygems git
-          hash r10k || gem install r10k --no-ri --no-rdoc
-          puppet apply -e 'include site::profile::puppet::vagrant::bootstrap_hiera' --modulepath=/vagrant_src/projects/infrastructure/:/vagrant_src/modules
-          puppet apply -e 'include site::profile::puppet::vagrant::bootstrap_puppetconf' --modulepath=/vagrant_src/projects/infrastructure:/vagrant_src/modules
+          #hash r10k || gem install r10k --no-ri --no-rdoc
+          export FACTERLIB="/vagrant_src/projects/infrastructure/modules/site/lib/facter/"
+          echo "step 2"
+          hostname --long
+          puppet master --debug --verbose # generate SSL CA cert / master cert
+          sleep 15
+          killall puppet
+          echo "step 3:"
+          hostname --long
+          puppet apply -e 'class { "site::profile::puppet::facter": facterlib => "/vagrant_src/projects/infrastructure/modules/site/lib/facter/"}' --modulepath=/vagrant_src/projects/infrastructure/modules:/vagrant_src/modules
+          echo "step 4"
+          hostname --long
+          puppet apply -e 'include site::profile::puppet::vagrant::bootstrap_hiera' --modulepath=/vagrant_src/projects/infrastructure/modules:/vagrant_src/modules
+          echo "step 5"
+          hostname --long
+          puppet apply -e 'include site::profile::puppet::vagrant::bootstrap_puppetconf' --modulepath=/vagrant_src/projects/infrastructure/modules:/vagrant_src/modules
+          echo "step 6"
+          hostname --long
+          echo "step 7"
+          puppet apply /vagrant_src/projects/infrastructure/site.pp
+          echo "step 8"
+          puppet apply /vagrant_src/projects/infrastructure/site.pp
+          echo "step 9"
+          puppet agent --test
+          echo "step 10"
     synced_folders:
       - {host_path: 'src', guest_path: '/vagrant_src'}
   agent:
     provisioners:
+      - type: hosts
       - type: shell
         inline: | # bootstrap puppet settings
           hash puppet 2>/dev/null || ( echo 'export PATH=$PATH:/opt/puppet/bin' >> /etc/profile ) ; source /etc/profile # EL path sometimes misses puppet
+          puppet agent --test --server master-vagrant.cloud.puppetlabs.net --waitforcert 5
     synced_folders:
       - {host_path: 'src', guest_path: '/vagrant_src'}

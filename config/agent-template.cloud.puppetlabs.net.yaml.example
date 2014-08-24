@@ -1,0 +1,10 @@
+---
+vms:
+
+  - name: agent1.cloud.puppetlabs.net
+    box: puppetlabs/debian-7.5-64-puppet
+    provision: :hosts
+    roles:
+      - 1gb-memory
+      - base
+      - agent
